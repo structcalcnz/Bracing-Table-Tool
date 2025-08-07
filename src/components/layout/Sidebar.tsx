@@ -149,11 +149,11 @@ export function Sidebar() {
         {/* Action Buttons */}
         <SheetFooter className="mt-4">
            <div className="flex w-full flex-col items-center space-y-4">
-              <Button className="w-48" variant="outline" onClick={() => alert("Print PDF Clicked!")}>
-                Print PDF
-              </Button>
               <Button className="w-48" variant="outline" onClick={() => alert("Custom Bracing Clicked!")}>
                 Custom Bracing
+              </Button>
+              <Button className="w-48" variant="outline" onClick={() => alert("Print PDF Clicked!")}>
+                Print PDF
               </Button>
               <Button className="w-48" onClick={handleSave}>Save</Button>
            </div>

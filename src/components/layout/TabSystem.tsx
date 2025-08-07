@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { Tab } from "@/types"; // Adjust path if needed
-import { TabContent } from "./TabContent"; // 1. Import the new component
+import { TabContent } from "./TabContent"; // Import the new component
 
 // Helper to generate unique IDs
 let nextId = 3;
@@ -18,8 +18,8 @@ let nextId = 3;
 export function TabSystem() {
   // State for the list of tabs
   const [tabs, setTabs] = useState<Tab[]>([
-    { id: "tab1", title: "Level 1" },
-    { id: "tab2", title: "Level 2" },
+    { id: "tab1", title: "Level 1 Cross" },
+    { id: "tab2", title: "Level 1 Along" },
   ]);
 
   // State for the currently active tab
@@ -33,13 +33,13 @@ export function TabSystem() {
   // State for managing the delete confirmation dialog
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tabToDelete, setTabToDelete] = useState<Tab | null>(null);
+  const [isAddingNewTab, setIsAddingNewTab] = useState(false);
 
-
-  const addTab = () => {
-    const id = `tab${nextId++}`;
-    const newTab = { id, title: `New Tab ${nextId - 1}` };
-    setTabs([...tabs, newTab]);
-    setActiveTab(id); // Automatically switch to the new tab
+  const handleAddNewTabClick = () => {
+    setIsAddingNewTab(true);
+    setTabToRename({ id: `tab${nextId++}`, title: "" });
+    setNewTabName("New Level"); // Suggest a default name
+    setRenameDialogOpen(true);
   };
 
   const handleDeleteClick = (tab: Tab) => {
@@ -63,38 +63,48 @@ export function TabSystem() {
     setDeleteDialogOpen(false);
     setTabToDelete(null);
   };
-  
 
   const handleRenameClick = (tab: Tab) => {
-    setTabToRename(tab);
-    setNewTabName(tab.title); // Pre-fill the input with the current title
-    setRenameDialogOpen(true);
+     setIsAddingNewTab(false); // Set the mode to "rename"
+     setTabToRename(tab);
+     setNewTabName(tab.title);
+     setRenameDialogOpen(true);
   };
 
   const handleRenameSubmit = () => {
     if (!tabToRename || !newTabName.trim()) return;
 
-    setTabs(
-      tabs.map((tab) =>
-        tab.id === tabToRename.id ? { ...tab, title: newTabName.trim() } : tab
-      )
-    );
+    if (isAddingNewTab) {
+      // Logic for ADDING a new tab
+      const newTab: Tab = { ...tabToRename, title: newTabName.trim() };
+      setTabs([...tabs, newTab]);
+      setActiveTab(newTab.id);
+    } else {
+      // Logic for RENAMING an existing tab (no change here)
+      setTabs(tabs.map((tab) => (tab.id === tabToRename.id ? { ...tab, title: newTabName.trim() } : tab)));
+    }
     
-    setRenameDialogOpen(false);
-    setTabToRename(null);
+    closeRenameDialog(); // Close and clean up
   };
 
+  const closeRenameDialog = () => {
+     setRenameDialogOpen(false);
+     setTabToRename(null);
+     setIsAddingNewTab(false);
+  };
 
   return (
     <div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center border-b">
-          <TabsList className="mr-auto">
+          <TabsList className="mr-auto whitespace-nowrap overflow-x-auto py-1">
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id} className="relative pr-8">
-                {tab.title}
-                 {/* Inline delete button on the tab */}
-                 <button
+              <TabsTrigger key={tab.id} value={tab.id} className="relative pr-8 flex-shrink-0">
+                <span className="block flex-1 min-w-0 text-left overflow-hidden text-ellipsis whitespace-nowrap">
+                    {tab.title}
+                </span>
+                
+                <button
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent the tab from being selected when clicking the X
                     handleDeleteClick(tab);
@@ -106,7 +116,7 @@ export function TabSystem() {
               </TabsTrigger>
             ))}
           </TabsList>
-          <Button variant="ghost" size="icon" onClick={addTab} className="m-1">
+          <Button variant="ghost" size="icon" onClick={handleAddNewTabClick} className="m-1">
             <PlusCircle className="h-5 w-5" />
           </Button>
         </div>
@@ -114,12 +124,11 @@ export function TabSystem() {
         {/* This is where the content for each tab will go */}
         {tabs.map((tab) => (
           <TabsContent key={tab.id} value={tab.id} className="mt-4">
-            {/* 2. Replace the old content with the new component */}
-            <div className="flex justify-between items-center mb-4">
-               <h2 className="text-2xl font-semibold">{tab.title}</h2>
-               <div>
-                  <Button variant="outline" size="sm" onClick={() => handleRenameClick(tab)} className="mr-2">Rename Tab</Button>
-               </div>
+               <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-semibold">{tab.title}</h2>
+                    <div>
+                        <Button variant="outline" size="sm" onClick={() => handleRenameClick(tab)} className="mr-2">Rename Tab</Button>
+                    </div>
             </div>
             
             <TabContent level={tab.title} />
@@ -129,10 +138,10 @@ export function TabSystem() {
       </Tabs>
 
       {/* RENAME DIALOG */}
-      <Dialog open={isRenameDialogOpen} onOpenChange={setRenameDialogOpen}>
+      <Dialog open={isRenameDialogOpen} onOpenChange={(open) => !open && closeRenameDialog()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Tab</DialogTitle>
+            <DialogTitle>{isAddingNewTab ? "Create New Tab" : "Rename Tab"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Label htmlFor="tab-name">Tab Name</Label>
@@ -144,7 +153,7 @@ export function TabSystem() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={closeRenameDialog}>Cancel</Button>
             <Button onClick={handleRenameSubmit}>Save</Button>
           </DialogFooter>
         </DialogContent>
