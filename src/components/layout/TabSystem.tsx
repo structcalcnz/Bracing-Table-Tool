@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { Tab } from "@/types"; // Adjust path if needed
+import { TabContent } from "./TabContent"; // 1. Import the new component
 
 // Helper to generate unique IDs
 let nextId = 3;
@@ -112,26 +113,17 @@ export function TabSystem() {
 
         {/* This is where the content for each tab will go */}
         {tabs.map((tab) => (
-          <TabsContent key={tab.id} value={tab.id} className="p-4">
+          <TabsContent key={tab.id} value={tab.id} className="mt-4">
+            {/* 2. Replace the old content with the new component */}
             <div className="flex justify-between items-center mb-4">
-               <h2 className="text-2xl font-semibold">{tab.title} Content</h2>
+               <h2 className="text-2xl font-semibold">{tab.title}</h2>
                <div>
-                  {/* Action buttons within the tab content */}
                   <Button variant="outline" size="sm" onClick={() => handleRenameClick(tab)} className="mr-2">Rename Tab</Button>
                </div>
             </div>
             
-            {/* 
-              ******************************************************************
-              *                                                                *
-              *   YOUR BRACING LINE TABLES AND INPUTS WILL GO HERE FOR THIS TAB   *
-              *                                                                *
-              ******************************************************************
-            */}
-            <div className="p-8 border-2 border-dashed border-muted rounded-lg">
-                <p className="text-muted-foreground">Future content for "{tab.title}" goes here.</p>
-            </div>
-            
+            <TabContent level={tab.title} />
+
           </TabsContent>
         ))}
       </Tabs>
