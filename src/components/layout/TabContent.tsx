@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 interface TabContentProps {
   // We pass the tab's title to use as a default value
   level: string;
+  bracingData: BracingData;
 }
 
 interface BracinglineState {
@@ -20,7 +21,7 @@ interface BracinglineState {
 
 let nextBracinglineId = 3; // Start after the initial two
 
-export function TabContent({ level }: TabContentProps) {
+export function TabContent({ level, bracingData }: TabContentProps) {
   // State for the top-left input block
   const [levelAndLocation, setLevelAndLocation] = useState(level);
   const [direction, setDirection] = useState("NS-Cross");
@@ -168,6 +169,7 @@ export function TabContent({ level }: TabContentProps) {
             totalTabDemandEQ={demandEQ}
             bracinglineCount={bracinglines.length}
             floorType={floorType}
+            bracingData={bracingData}
           />
         ))}
       </div>

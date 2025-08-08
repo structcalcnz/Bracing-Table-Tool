@@ -12,18 +12,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 
 // --- The New Helper Function ---
-function getBuRatingForLength(length: number, ratings: Record<string, number | null>): number | null {
-  let bestMatchKey = -1;
-  for (const lengthKey in ratings) {
-    const availableLength = parseFloat(lengthKey);
-    if (availableLength <= length && availableLength > bestMatchKey) {
-      bestMatchKey = availableLength;
-    }
+function getBestMatchKey(length: number, keys: string[]): string | null {
+  let bestMatch: string | null = null;
+
+  for (const key of keys) {
+    const numKey = parseFloat(key);
+    if (numKey > length) break;
+    bestMatch = key;
   }
-  if (bestMatchKey !== -1) {
-    return ratings[bestMatchKey.toString()];
-  }
-  return null;
+
+  return bestMatch;
 }
 
 // --- Data Structures (Interfaces) ---
@@ -47,38 +45,39 @@ interface BracingRow {
 }
 // --- Component Props ---
 interface BracinglineProps {
-    id: number;
-    index: number;
-    onDeleteREquest: (id: number) => void;
-    onUpdate: (id: number, totals: { wind: number; eq: number }) => void;
-    onAdd: (index: number) => void;
-    totalTabDemandWind: number;
-    totalTabDemandEQ: number;
-    bracinglineCount: number; // Hidden variable is now a prop
-    floorType: string;
+  id: number;
+  index: number;
+  onDeleteRequest: (id: number) => void;
+  onUpdate: (id: number, totals: { wind: number; eq: number }) => void;
+  onAdd: (index: number) => void;
+  totalTabDemandWind: number;
+  totalTabDemandEQ: number;
+  bracinglineCount: number; // Hidden variable is now a prop
+  floorType: string;
+  bracingData: BracingData
 }
 
 let nextRowId = 1;
 
 // Helper to create a default row
 const createDefaultRow = (bracinglineNo: string, rowCount: number): BracingRow => ({
-    id: nextRowId++,
-    label: `${bracinglineNo}-${rowCount + 1}`,
-    system: "GIB",
-    type: "GS1-N",
-    lengthOrCount: 1.2,
-    height: 2.4,
+  id: nextRowId++,
+  label: `${bracinglineNo}-${rowCount + 1}`,
+  system: "GIB",
+  type: "GS1-N",
+  lengthOrCount: 1.2,
+  height: 2.4,
 });
 
-export function Bracingline({ id, index, onDeleteRequest, onUpdate, onAdd, totalTabDemandWind, totalTabDemandEQ, bracinglineCount, floorType}: BracinglineProps) {
+export function Bracingline({ bracingData, id, index, onDeleteRequest, onUpdate, onAdd, totalTabDemandWind, totalTabDemandEQ, bracinglineCount, floorType}: BracinglineProps) {
   const [bracinglineNo, setBracinglineNo] = useState(`BL-${id}`);
   const [externalWallLength, setExternalWallLength] = useState(0);
   const [rows, setRows] = useState<BracingRow[]>([createDefaultRow(bracinglineNo, 0)]);
-  const [bracingData, setBracingData] = useState<BracingData | null>(null);
+  //const [bracingData, setBracingData] = useState<BracingData | null>(null);
 
-  useEffect(() => {
-    fetch('/bracing-data.json').then(res => res.json()).then(data => setBracingData(data));
-  }, []);
+  //useEffect(() => {
+  //  fetch('/bracing-data.json').then(res => res.json()).then(data => setBracingData(data));
+  //}, []);
 
   // --- Add row at a specific index ---
   const addRow = (rowIndex: number) => {
@@ -89,9 +88,9 @@ export function Bracingline({ id, index, onDeleteRequest, onUpdate, onAdd, total
   };
 
   const deleteRow = (rowId: number) => {
-     if (rows.length > 1) {
-         setRows(rows.filter(row => row.id !== rowId));
-     }
+    if (rows.length > 1) {
+      setRows(rows.filter(row => row.id !== rowId));
+    }
   };
 
   // ---  Handle system change to update type ---
@@ -125,26 +124,26 @@ export function Bracingline({ id, index, onDeleteRequest, onUpdate, onAdd, total
      for (const row of rows) {
       const typeData = getTypeData(row.system, row.type);
       if (!typeData) continue;
-      
-      // Req 7: Using the new height ratio formula (2.4 / Height)
-      const heightRatio = row.height > 0 ? 2.4 / row.height : 0;
+     
       let buAchievedWind = 0;
       let buAchievedEQ = 0;
-      const isNumberBased = row.system === 'Custom' && typeData.wind['1'] !== undefined;
+      const isNumberBased = Object.keys(typeData.wind)[0]==="n_1";
 
       if (isNumberBased) {
-        const rawWindRating = typeData.wind['1'] ?? 0;
-        const rawEqRating = typeData.eq['1'] ?? 0;
+        const windRating = typeData.wind['n_1'] ?? 0;
+        const eqRating = typeData.eq['n_1'] ?? 0;
 
+        // Number-based Total = Rating * Quantity
+        buAchievedWind = windRating * row.lengthOrCount ;
+        buAchievedEQ = eqRating * row.lengthOrCount ;
+      } else {
+        const heightRatio = row.height > 0 ? 2.4 / row.height : 0;
+        const key = getBestMatchKey(row.lengthOrCount, Object.keys(typeData.wind));
+        const rawWindRating = key ? typeData.wind[key] : null;
+        const rawEqRating = key ? typeData.eq[key] : null;
+        
         const windRating = applyFloorTypeLimit(rawWindRating);
         const eqRating = applyFloorTypeLimit(rawEqRating);
-
-        // Number-based Total = Rating * Quantity * HeightRatio
-        buAchievedWind = windRating * row.lengthOrCount * heightRatio;
-        buAchievedEQ = eqRating * row.lengthOrCount * heightRatio;
-      } else {
-        const windRating = getBuRatingForLength(row.lengthOrCount, typeData.wind);
-        const eqRating = getBuRatingForLength(row.lengthOrCount, typeData.eq);
         // Length-based Total = BUs * Length * HeightRatio (where BUs is now treated as BUs/m)
         buAchievedWind = (windRating ?? 0) * row.lengthOrCount * heightRatio;
         buAchievedEQ = (eqRating ?? 0) * row.lengthOrCount * heightRatio;
@@ -217,12 +216,18 @@ export function Bracingline({ id, index, onDeleteRequest, onUpdate, onAdd, total
                     <TableBody>
                         {rows.map((row, rowIndex)=> {
                             const typeData = getTypeData(row.system, row.type);
-                            const isNumberBased = row.system === 'Custom' && typeData?.wind['1'] !== undefined;
-                            const rawWindRating = isNumberBased ? (typeData?.wind['1'] ?? null) : (typeData ? getBuRatingForLength(row.lengthOrCount, typeData.wind) : null);
-                            const rawEqRating = isNumberBased ? (typeData?.eq['1'] ?? null) : (typeData ? getBuRatingForLength(row.lengthOrCount, typeData.eq) : null);
+                            const isNumberBased = typeData && Object.keys(typeData.wind)[0] === 'n_1';
+                            const key = isNumberBased
+                                ? 'n_1'
+                                : typeData
+                                    ? getBestMatchKey(row.lengthOrCount, Object.keys(typeData.wind)) ?? null
+                                    : null;
+                            const rawWindRating = typeData && key ? typeData.wind[key] : null;
+                            const rawEqRating = typeData && key ? typeData.eq[key] : null;
+
                             const windRating = applyFloorTypeLimit(rawWindRating);
                             const eqRating = applyFloorTypeLimit(rawEqRating);
-                            const isRowInvalid = windRating === null || eqRating === null;
+                            const isRowInvalid = !typeData || windRating === null || eqRating === null;
                             const heightRatio = row.height > 0 ? 2.4 / row.height : 0;
                             const totalWind = (isNumberBased ? (windRating ?? 0) * row.lengthOrCount : (windRating ?? 0) * row.lengthOrCount) * heightRatio;
                             const totalEQ = (isNumberBased ? (eqRating ?? 0) * row.lengthOrCount : (eqRating ?? 0) * row.lengthOrCount) * heightRatio;

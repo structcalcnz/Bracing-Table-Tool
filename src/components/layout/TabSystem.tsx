@@ -15,7 +15,7 @@ import { TabContent } from "./TabContent"; // Import the new component
 // Helper to generate unique IDs
 let nextId = 3;
 
-export function TabSystem() {
+export function TabSystem({ bracingData }: { bracingData: BracingData }) {
   // State for the list of tabs
   const [tabs, setTabs] = useState<Tab[]>([
     { id: "tab1", title: "Level 1 Cross" },
@@ -131,7 +131,7 @@ export function TabSystem() {
                     </div>
             </div>
             
-            <TabContent level={tab.title} />
+            <TabContent level={tab.title} bracingData={bracingData} />
 
           </TabsContent>
         ))}

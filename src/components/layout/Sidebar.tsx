@@ -22,7 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils"; // This utility is for combining class names
 
-export function Sidebar() {
+export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => void; }) {
   // State management for each input field.
   // In a real app, this state might be lifted up to a parent component or managed globally.
   const [projectName, setProjectName] = useState("");
@@ -119,7 +119,7 @@ export function Sidebar() {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  {date ? format(date, "d/MM/yyyy") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -149,7 +149,7 @@ export function Sidebar() {
         {/* Action Buttons */}
         <SheetFooter className="mt-4">
            <div className="flex w-full flex-col items-center space-y-4">
-              <Button className="w-48" variant="outline" onClick={() => alert("Custom Bracing Clicked!")}>
+              <Button className="w-48" variant="outline" onClick={onOpenCustomBracing}>
                 Custom Bracing
               </Button>
               <Button className="w-48" variant="outline" onClick={() => alert("Print PDF Clicked!")}>
