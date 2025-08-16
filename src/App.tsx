@@ -32,11 +32,21 @@ const handleExportReport = () => {
 function App() {
   
   const setBracingData = useBracingStore((s) => s.setBracingData);
-  useEffect(() => {
-    fetch('/bracing-data.json')
-      .then((res) => res.json())
-      .then(setBracingData);
-  }, [setBracingData]);
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      console.log('Fetching from:', `${import.meta.env.BASE_URL}/bracing-data.json`);
+      const res = await fetch(`${import.meta.env.BASE_URL}/bracing-data.json`);
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const data = await res.json();
+      setBracingData(data);
+    } catch (err) {
+      console.error('Error loading bracing data:', err);
+    }
+  };
+  loadData();
+}, [setBracingData]);
+
 
   return (
     <div className="flex h-screen bg-background text-foreground">
