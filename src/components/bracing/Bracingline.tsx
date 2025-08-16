@@ -1,6 +1,6 @@
 // src/components/bracing/Bracingline.tsx
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAppStore } from '@/store';
 import { useBracingStore } from '@/bracingStore';
 import { calculateLineRows, calculateLineTotals, calculateMinDemand,validateLineTotals } from "@/calculationUtils";
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-import type { BracingType, BracingData, BracingRow } from "@/types";
+import type { BracingRow } from "@/types";
 
 type LineTotals = {
   lineTotalWind: number;
@@ -50,7 +50,7 @@ export function Bracingline({ tabId, lineId, index, onAdd, onDeleteRequest, onTo
 
   // --- Calculation using zustand data ---
   const calculatedRows = useMemo(() => {
-    return calculateLineRows(lineData, bracingData, floorType);
+    return calculateLineRows(lineData ?? { rows: [] }, bracingData, floorType);
   }, [lineData, bracingData, floorType]);
 
   // --- Totals for bracingline ---

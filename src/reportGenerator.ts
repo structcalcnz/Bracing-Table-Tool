@@ -6,7 +6,6 @@ import type { ProjectInfo, BracinglineData, Tab, TabData, BracingData, DisplayBr
 
 
 function processBracingLine({
-  tabId,
   lineData,
   bracingData,
   floorType,
@@ -14,7 +13,6 @@ function processBracingLine({
   demandEQ,
   bracinglineCount,
 }: {
-  tabId: string;
   lineData: BracinglineData;
   bracingData: BracingData;
   floorType: 'Timber' | 'Concrete';
@@ -60,7 +58,6 @@ function processBracingLine({
 function processTab(tabData: TabData, bracingData: BracingData) {  
   const processedLines = tabData.bracinglines.map(lineData =>
     processBracingLine({
-      tabId: tabData.id,
       lineData,
       bracingData,
       floorType: tabData.floorType,

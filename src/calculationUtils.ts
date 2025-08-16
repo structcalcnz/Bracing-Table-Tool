@@ -1,5 +1,5 @@
 // src/calculationUtils.ts
-import type { BracingRow, DisplayBracingRow, TabData, BracinglineData, BracingData } from './types';
+import type { BracingRow, DisplayBracingRow, BracingData } from './types';
 
 
 // * Finds the best matching key from a sorted array of numeric strings.

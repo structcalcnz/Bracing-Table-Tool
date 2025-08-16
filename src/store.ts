@@ -1,6 +1,6 @@
 // src/store.ts
 import { create } from 'zustand';
-import type { ProjectInfo, Tab, TabData, BracinglineData, BracingRow, DisplayBracingRow, } from './types'; // Assuming types.ts is in the same folder
+import type { ProjectInfo, Tab, TabData, BracinglineData, BracingRow } from './types'; // Assuming types.ts is in the same folder
 
 let nextBracingLineId = 3;
 let nextRowId = 100;
