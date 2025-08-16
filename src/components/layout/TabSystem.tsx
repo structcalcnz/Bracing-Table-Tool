@@ -9,21 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import type { Tab } from "@/types"; // Adjust path if needed
+import type { Tab } from "@/types"; 
+import { useAppStore } from '@/store';
 import { TabContent } from "./TabContent"; // Import the new component
+
 
 // Helper to generate unique IDs
 let nextId = 3;
 
-export function TabSystem({ bracingData }: { bracingData: BracingData }) {
-  // State for the list of tabs
-  const [tabs, setTabs] = useState<Tab[]>([
-    { id: "tab1", title: "Level 1 Cross" },
-    { id: "tab2", title: "Level 1 Along" },
-  ]);
+export function TabSystem() {
+  const { tabs, addTab, renameTab, deleteTab } = useAppStore();
 
   // State for the currently active tab
-  const [activeTab, setActiveTab] = useState("tab1");
+  const [activeTab, setActiveTab] = useState(tabs[0]?.id || "");
 
   // State for managing the rename dialog
   const [isRenameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -49,17 +47,17 @@ export function TabSystem({ bracingData }: { bracingData: BracingData }) {
   
   const confirmDelete = () => {
     if (!tabToDelete) return;
-  
-    // Filter out the tab to be deleted
-    const newTabs = tabs.filter((tab) => tab.id !== tabToDelete.id);
-  
-    // If the deleted tab was the active one, set a new active tab
+    
+    // Check if the tab being deleted is the active one
     if (activeTab === tabToDelete.id) {
-      // Set active tab to the first one, or null if no tabs are left
-      setActiveTab(newTabs.length > 0 ? newTabs[0].id : "");
+      const currentIndex = tabs.findIndex(t => t.id === tabToDelete.id);
+      // Activate the previous tab, or the first tab if the first was deleted
+      const newActiveId = tabs[currentIndex - 1]?.id || tabs[0]?.id || "";
+      setActiveTab(newActiveId);
     }
-  
-    setTabs(newTabs);
+
+    deleteTab(tabToDelete.id);
+
     setDeleteDialogOpen(false);
     setTabToDelete(null);
   };
@@ -75,16 +73,14 @@ export function TabSystem({ bracingData }: { bracingData: BracingData }) {
     if (!tabToRename || !newTabName.trim()) return;
 
     if (isAddingNewTab) {
-      // Logic for ADDING a new tab
       const newTab: Tab = { ...tabToRename, title: newTabName.trim() };
-      setTabs([...tabs, newTab]);
-      setActiveTab(newTab.id);
+      addTab(newTab); // Update state via callback
+      setActiveTab(newTab.id); // Set the new tab as active locally
     } else {
-      // Logic for RENAMING an existing tab (no change here)
-      setTabs(tabs.map((tab) => (tab.id === tabToRename.id ? { ...tab, title: newTabName.trim() } : tab)));
+      renameTab( tabToRename.id, newTabName.trim());
     }
     
-    closeRenameDialog(); // Close and clean up
+    closeRenameDialog();
   };
 
   const closeRenameDialog = () => {
@@ -99,7 +95,7 @@ export function TabSystem({ bracingData }: { bracingData: BracingData }) {
         <div className="flex items-center border-b">
           <TabsList className="mr-auto whitespace-nowrap overflow-x-auto py-1">
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id} className="relative pr-8 flex-shrink-0">
+              <TabsTrigger value={tab.id} className="relative pr-8 flex-shrink-0">
                 <span className="block flex-1 min-w-0 text-left overflow-hidden text-ellipsis whitespace-nowrap">
                     {tab.title}
                 </span>
@@ -131,7 +127,7 @@ export function TabSystem({ bracingData }: { bracingData: BracingData }) {
                     </div>
             </div>
             
-            <TabContent level={tab.title} bracingData={bracingData} />
+            <TabContent tabId={tab.id} />
 
           </TabsContent>
         ))}

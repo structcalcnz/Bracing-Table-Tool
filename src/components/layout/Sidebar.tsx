@@ -1,46 +1,26 @@
 // src/components/layout/Sidebar.tsx
 
-import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Menu } from "lucide-react";
-
 // shadcn/ui components
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils"; // This utility is for combining class names
+import { useAppStore } from '@/store';
 
-export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => void; }) {
-  // State management for each input field.
-  // In a real app, this state might be lifted up to a parent component or managed globally.
-  const [projectName, setProjectName] = useState("");
-  const [projectNo, setProjectNo] = useState("");
-  const [client, setClient] = useState("");
-  const [designer, setDesigner] = useState("");
-  const [note, setNote] = useState("");
-  const [date, setDate] = useState<Date>();
+interface SidebarProps {
+  onExportReport: () => void; 
+}
+export function Sidebar({onExportReport} : SidebarProps) {
+  // --- Connect to the Zustand store ---
+  const { projectInfo, updateProjectInfoField } = useAppStore();
 
-  const handleSave = () => {
-    // In a real application, you would handle the save logic here.
-    // e.g., send the data to an API, update global state, etc.
-    const projectData = { projectName, projectNo, client, designer, date, note };
-    console.log("Saving project data:", projectData);
-    alert("Project Data Saved! (Check the console)");
-  };
-
-  return (
+   return (
     <Sheet>
       {/* This is the button that will open the sidebar */}
       <SheetTrigger asChild>
@@ -54,7 +34,7 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
         <SheetHeader>
           <SheetTitle>Project Details</SheetTitle>
           <SheetDescription>
-            Enter the project information here. Click save when you're done.
+            Enter the project information here.
           </SheetDescription>
         </SheetHeader>
 
@@ -66,8 +46,8 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
             </Label>
             <Input
               id="project-name"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
+              value={projectInfo.projectName}
+              onChange={(e) => updateProjectInfoField('projectName', e.target.value)}
               className="flex-1"
             />
           </div>
@@ -77,8 +57,8 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
             </Label>
             <Input
               id="project-no"
-              value={projectNo}
-              onChange={(e) => setProjectNo(e.target.value)}
+              value={projectInfo.projectNo}
+              onChange={(e) => updateProjectInfoField('projectNo', e.target.value)}
               className="flex-1"
             />
           </div>
@@ -88,8 +68,8 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
             </Label>
             <Input
               id="client"
-              value={client}
-              onChange={(e) => setClient(e.target.value)}
+              value={projectInfo.client} 
+              onChange={(e) => updateProjectInfoField('client', e.target.value)}
               className="flex-1"
             />
           </div>
@@ -99,8 +79,8 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
             </Label>
             <Input
               id="designer"
-              value={designer}
-              onChange={(e) => setDesigner(e.target.value)}
+              value={projectInfo.designer} 
+              onChange={(e) => updateProjectInfoField('designer', e.target.value)}
               className="flex-1"
             />
           </div>
@@ -115,19 +95,18 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
                   variant={"outline"}
                   className={cn(
                     "flex-1 justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
+                    !projectInfo.date && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "d/MM/yyyy") : <span>Pick a date</span>}
+                  {projectInfo.date  ? format(projectInfo.date , "d/MM/yyyy") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
+                  selected={projectInfo.date }
+                  onSelect={(date) => updateProjectInfoField('date', date || new Date())}
                 />
               </PopoverContent>
             </Popover>
@@ -138,8 +117,8 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
             </Label>
             <Textarea
               id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              value={projectInfo.note} 
+              onChange={(e) => updateProjectInfoField('note', e.target.value)}
               className="flex-1"
               placeholder="Type your notes here."
             />
@@ -147,15 +126,11 @@ export function Sidebar({ onOpenCustomBracing }: { onOpenCustomBracing: () => vo
         </div>
 
         {/* Action Buttons */}
-        <SheetFooter className="mt-4">
+        <SheetFooter className="mt-6">
            <div className="flex w-full flex-col items-center space-y-4">
-              <Button className="w-48" variant="outline" onClick={onOpenCustomBracing}>
-                Custom Bracing
-              </Button>
-              <Button className="w-48" variant="outline" onClick={() => alert("Print PDF Clicked!")}>
-                Print PDF
-              </Button>
-              <Button className="w-48" onClick={handleSave}>Save</Button>
+              <Button variant="outline" className="w-48" > Custom Bracing </Button>
+              <Button variant="outline" className="w-48" > Export Data </Button>
+              <Button className="w-48" onClick={onExportReport}>Export Report</Button>
            </div>
         </SheetFooter>
       </SheetContent>

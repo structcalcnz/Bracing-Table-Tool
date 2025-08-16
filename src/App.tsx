@@ -1,93 +1,50 @@
-import { useState, useEffect } from "react";
+// src/App.tsx
 import './App.css'
+import { useEffect } from 'react';
+import { useBracingStore } from './bracingStore';
+import { useAppStore } from './store';
 
 import { Sidebar } from "./components/layout/Sidebar";
 import { TabSystem } from "./components/layout/TabSystem";
-import { CustomBracingManager } from "./components/bracing/CustomBracingManager";
-import type { BracingData, CustomBracing } from "./types";
+import { assembleFullReport, generateHTMLReport } from './reportGenerator';
 
+const handleExportReport = () => {
+  // Get all relevant data from the store
+  const projectInfo = useAppStore.getState().projectInfo;
+  const tabs = useAppStore.getState().tabs;
+  const tabsData = useAppStore.getState().tabsData;
+  const bracingData = useBracingStore.getState().bracingData;
+
+  if (!bracingData) {
+    alert("Bracing data is not loaded yet.");
+    return;
+  }
+  const reportData = assembleFullReport( projectInfo, tabs, tabsData, bracingData ); 
+  const html = generateHTMLReport(reportData); 
+
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
+};
 
 function App() {
-  const [baseBracingData, setBaseBracingData] = useState<BracingData | null>(null);
-  const [mergedBracingData, setMergedBracingData] = useState<BracingData | null>(null);
-  const [customBracings, setCustomBracings] = useState<CustomBracing[]>([]);
-  const [isBracingManagerOpen, setBracingManagerOpen] = useState(false);
-
-  // 1. Load the base JSON file on initial mount
+  
+  const setBracingData = useBracingStore((s) => s.setBracingData);
   useEffect(() => {
     fetch('/bracing-data.json')
-      .then(res => res.json())
-      .then(data => setBaseBracingData(data));
-    
-    // Also load any saved custom bracings from localStorage
-    const saved = localStorage.getItem('customBracings');
-    if (saved) {
-      setCustomBracings(JSON.parse(saved));
-    }
-  }, []);
-
-  // 2. Merge base data and custom data whenever either one changes
-  useEffect(() => {
-    if (!baseBracingData) return;
-
-    // Create a deep copy to avoid modifying the original base data
-    const newMergedData = JSON.parse(JSON.stringify(baseBracingData));
-
-    // Find the "Custom" system to add our types to
-    let customSystem = newMergedData.systems.find((s: { name: string; }) => s.name === 'Custom');
-    if (customSystem) {
-      // Add the user's custom bracings to the end of the existing list
-      customSystem.types.push(...customBracings);
-    }
-    
-    setMergedBracingData(newMergedData);
-  }, [baseBracingData, customBracings]);
-
-
-  // 3. Save custom bracings to localStorage whenever they are updated
-  const handleSaveCustomBracing = (bracingToSave: CustomBracing) => {
-    setCustomBracings(prev => {
-      const existing = prev.find(b => b.name === bracingToSave.name);
-      let newCustomBracings;
-      if (existing) {
-        // It's an update
-        newCustomBracings = prev.map(b => (b.name === bracingToSave.name ? bracingToSave : b));
-      } else {
-        // It's a new addition
-        newCustomBracings = [...prev, bracingToSave];
-      }
-      localStorage.setItem('customBracings', JSON.stringify(newCustomBracings));
-      return newCustomBracings;
-    });
-  };
-  
-  const handleDeleteCustomBracing = (bracingName: string) => {
-    setCustomBracings(prev => {
-      const newCustomBracings = prev.filter(b => b.name !== bracingName);
-      localStorage.setItem('customBracings', JSON.stringify(newCustomBracings));
-      return newCustomBracings;
-    });
-  };
+      .then((res) => res.json())
+      .then(setBracingData);
+  }, [setBracingData]);
 
   return (
     <div className="flex h-screen bg-background text-foreground">
-      <Sidebar onOpenCustomBracing={() => setBracingManagerOpen(true)} />
-      
+      <Sidebar onExportReport={handleExportReport} />
       <main className="flex-1 p-4 pl-20 pt-8 overflow-auto">
-        {/* Pass the FINAL merged data down to the tab system */}
-        {mergedBracingData && <TabSystem bracingData={mergedBracingData} />}
+        <TabSystem />
       </main>
-
-      {/* The management dialog component */}
-      <CustomBracingManager
-        isOpen={isBracingManagerOpen}
-        onOpenChange={setBracingManagerOpen}
-        existingBracings={customBracings}
-        onSave={handleSaveCustomBracing}
-        onDelete={handleDeleteCustomBracing}
-      />
     </div>
   );
 }
-
 export default App;

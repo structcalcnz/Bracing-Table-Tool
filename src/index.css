@@ -118,3 +118,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide the printable component from the screen by default */
+/*.printable-content {
+  display: none;
+}*/
+
+@media print {
+  /* This is the magic: it tells the browser how to format the page */
+  @page {
+    size: A4 portrait;
+    margin: 10mm; /* Add some margin for a professional look */
+  }
+
+  /* Force a page break after elements with this class */
+  .break-after-page {
+    page-break-after: always;
+  }
+  
+  /* Hide every element on the page EXCEPT our printable content */
+  /*body > *:not(.printable-content) {
+    display: none;
+  }*/
+
+  /* Ensure our printable content is the only thing visible */
+  /*body {
+    background-color: white; /* Ensure no dark mode background prints */
+  /*}*/
+
+  .printable-content {
+    display: block; /* Make it visible for printing */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}
