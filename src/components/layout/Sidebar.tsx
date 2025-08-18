@@ -10,6 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
 import { cn } from "@/lib/utils"; // This utility is for combining class names
 import { useAppStore } from '@/store';
 
@@ -132,6 +142,46 @@ export function Sidebar({onExportReport} : SidebarProps) {
               <Button variant="outline" className="w-48" > Export Data </Button>
               <Button className="w-48" onClick={onExportReport}>Export Report</Button>
            </div>
+           <div className="flex w-full flex-col items-center space-y-4 mt-24">
+           <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-48">About</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Bracing Table Tool Manual</DialogTitle>
+                  <DialogDescription>
+                    Overview of usage and limitations as per NZS 3604.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 text-sm">
+                  <p>
+                    This tool assists in configuring and verifying bracing elements for timber-framed buildings in accordance with NZS 3604. It supports wind and earthquake demand inputs, bracing line setup, and automatic rate lookup for common systems.
+                  </p>
+                  <p>
+                    Minimum bracing requirements per line must meet the greater of: <br />
+                    <li>50% average demand, </li><li>100 BUs,</li><li>or 15 BUs × external wall length.</li> 
+                    Bracing rates based on length are height-sensitive and capped at 120 BUs/m (timber floor) or 150 BUs/m (concrete floor). Rates based on number are uncapped but require SED connections.
+                  </p>
+                  <p>
+                    This tool is intended for guidance only. Users must verify results and ensure compliance with local council requirements and engineering judgment.
+                  </p>                  
+                  <p>
+                    For full technical guidance, read more on the   <a
+                      href="https://sites.google.com/view/nzsc-team/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-800 underline">
+                    <strong>NZSC team website</strong></a>.
+                  </p>
+                  <h4 className="font-semibold">License Summary</h4>
+                  <p>
+                    This application is free to use and distribute for both commercial and non-commercial purposes as a bracing design aid under NZ standards. You may not modify or reverse-engineer the code without permission. No warranty is provided—use at your own risk. The authors are not liable for any damages or misuse.
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
+            </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>
